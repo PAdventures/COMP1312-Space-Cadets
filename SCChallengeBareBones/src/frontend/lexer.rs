@@ -120,7 +120,7 @@ impl Scanner {
             "decr" => TokenType::Decrement,
             "while" => TokenType::While,
             "do" => TokenType::Do,
-            "it" => TokenType::Is,
+            "is" => TokenType::Is,
             "not" => TokenType::Not,
             "end" => TokenType::End,
             _ => TokenType::Identifier,
