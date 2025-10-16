@@ -2,6 +2,7 @@
 mod command;
 mod frontend;
 mod runtime;
+mod utils;
 use crate::{
     frontend::{ast, parser},
     runtime::{environment, interpreter::evaluate, values},
@@ -45,6 +46,19 @@ fn main() {
                 println!("{}", error.to_owned().to_string());
             });
             exit(EXIT_CODE_SCANNER_ERROR);
+        }
+
+        // If the debug flag is set, print the token stream
+        if arg_matches.get_flag("debug") {
+            println!(
+                "{}",
+                scanner
+                    .stream
+                    .iter()
+                    .map(|token| token.to_string())
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            );
         }
 
         // Create a new parser instance with the scanner's token stream
