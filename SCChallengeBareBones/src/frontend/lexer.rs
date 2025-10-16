@@ -1,3 +1,5 @@
+use crate::utils::token_pos;
+
 // Import necessary modules
 use super::errors::{LexicalError, LexicalErrorType};
 use std::{fmt, str::FromStr};
@@ -37,6 +39,7 @@ pub struct Token {
     pub lexeme: String,
     pub literal: u64,
     pub line: u32,
+    pub char: u32,
     _debug: bool,
 }
 
@@ -46,8 +49,11 @@ impl fmt::Display for Token {
         if self._debug {
             return write!(
                 f,
-                "[line {}] {} {} {}",
-                self.line, self.token_type, self.lexeme, self.literal
+                "{} {} {} {}",
+                token_pos(&self),
+                self.token_type,
+                self.lexeme,
+                self.literal
             );
         }
         write!(f, "{} {} {}", self.token_type, self.lexeme, self.literal)
@@ -60,6 +66,7 @@ impl Token {
         lexeme: String,
         literal: u64,
         line: u32,
+        char: u32,
         debug: bool,
     ) -> Self {
         Token {
@@ -67,13 +74,14 @@ impl Token {
             lexeme,
             literal,
             line,
+            char,
             _debug: debug,
         }
     }
 
     // Helper function to create a new EOF token
     pub fn eof(line: u32, debug: bool) -> Self {
-        Token::new(TokenType::EOF, String::new(), 0, line, debug)
+        Token::new(TokenType::EOF, String::new(), 0, line, 0, debug)
     }
 }
 
@@ -86,6 +94,7 @@ pub struct Scanner {
     _start: usize,   // Index of the start of the current lexeme
     _current: usize, // Index of the current character being processed
     _line: u32,
+    _char: u32,
     _debug: bool,
 }
 
@@ -98,6 +107,7 @@ impl Scanner {
             _start: 0,
             _current: 0,
             _line: 1,
+            _char: 0,
             _debug: debug,
         }
     }
@@ -134,10 +144,13 @@ impl Scanner {
             ';' => self.add_token(TokenType::SemiColon, 0),
 
             // Ignore whitespace characters (spaces, carriage returns, tabs)
-            ' ' | '\r' | '\t' => {}
+            ' ' | '\r' | '\t' => self._char += 1,
 
             // Ignore newline characters, but increment the line counter
-            '\n' => self._line += 1,
+            '\n' => {
+                self._line += 1;
+                self._char = 0;
+            }
             _ => {
                 if char.is_ascii_digit() {
                     // Create number literal tokens
@@ -148,6 +161,7 @@ impl Scanner {
                 } else {
                     self.errors.push(LexicalError::new(
                         self._line,
+                        self._char,
                         LexicalErrorType::UnexpectedCharacter(char),
                     ));
                 }
@@ -157,7 +171,7 @@ impl Scanner {
 
     // Helper function that converts a word into an identifier or keyword token
     fn identifier(&mut self) {
-        while self.is_alpha_numeric(self.peek()) {
+        while !self.is_at_end() && self.is_alpha_numeric(self.peek()) {
             self.advance();
         }
 
@@ -168,7 +182,7 @@ impl Scanner {
 
     // Helper function that converts a base 10 encoded word into an integer literal token
     fn number(&mut self) {
-        while self.peek().is_ascii_digit() {
+        while !self.is_at_end() && self.peek().is_ascii_digit() {
             self.advance();
         }
 
@@ -199,11 +213,13 @@ impl Scanner {
     // Helper function to create a new token with the given type and push it to the token stream
     fn add_token(&mut self, token_type: TokenType, literal: u64) {
         let text = &self._source[self._start..self._current];
+        self._char += text.len() as u32;
         let token = Token::new(
             token_type,
             text.iter().collect::<String>(),
             literal,
             self._line,
+            self._char,
             self._debug,
         );
         self.stream.push(token);

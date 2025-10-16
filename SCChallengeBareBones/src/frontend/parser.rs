@@ -1,10 +1,13 @@
 // Import necessary modules
-use crate::frontend::{
-    ast::{
-        ASTExpression, ASTLiteral, ASTStatement, ComparisonExpression,
-        VariableAssignmentExpression, WhileLoopStatement,
+use crate::{
+    frontend::{
+        ast::{
+            ASTExpression, ASTLiteral, ASTStatement, ComparisonExpression,
+            VariableAssignmentExpression, WhileLoopStatement,
+        },
+        lexer::{Token, TokenType},
     },
-    lexer::{Token, TokenType},
+    utils::token_pos,
 };
 
 // Define a custom error type for parsing errors
@@ -21,8 +24,10 @@ impl ParserError {
     // Helper function for pretty printing
     pub fn to_string(&self) -> String {
         format!(
-            "[line {}] Parse error at '{}': {}",
-            self.token.line, self.token.lexeme, self.message
+            "{} Parse error at '{}': {}",
+            token_pos(&self.token),
+            self.token.lexeme,
+            self.message
         )
     }
 }
@@ -132,7 +137,10 @@ impl<'a> Parser<'a> {
             statements.push(statement);
         }
 
-        self.advance(); // Advance past the end keyword
+        // We always expect an "end" token after the body of the while loop
+        if !self.match_token(&[TokenType::End]) {
+            return Err(self.error("Expected and \"end\" token"));
+        };
 
         // We always expect a semi-colon after a statement
         if !self.match_token(&[TokenType::SemiColon]) {
@@ -236,7 +244,9 @@ impl<'a> Parser<'a> {
 
     // Helper function that continuously advances over tokens until it finds a semicolon or a statement
     fn synchronize(&mut self) {
-        self.advance();
+        if !self.is_at_end() {
+            self.advance();
+        }
 
         while !self.is_at_end() {
             if self.previous().token_type == TokenType::SemiColon {
@@ -271,7 +281,7 @@ impl<'a> Parser<'a> {
 
     // Helper function that checks if the current token is the EOF (End Of File) token
     fn is_at_end(&self) -> bool {
-        self.peek().token_type == TokenType::EOF
+        self._current == self._tokens.len() || (self.peek().token_type == TokenType::EOF)
     }
 
     // Helper function that checks if the current token matches any of the given token types
@@ -292,6 +302,6 @@ impl<'a> Parser<'a> {
 
     // Helper function that creates a ParserError with the given message and the current token
     fn error(&self, message: &str) -> ParserError {
-        ParserError::new(self.peek().clone(), message.to_string())
+        ParserError::new(self.previous().clone(), message.to_string())
     }
 }

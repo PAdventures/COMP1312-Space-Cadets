@@ -10,18 +10,26 @@ pub enum LexicalErrorType {
 #[derive(Clone, Debug)]
 pub struct LexicalError {
     line: u32,
+    char: u32,
     error_type: LexicalErrorType,
 }
 
 impl LexicalError {
-    pub fn new(line: u32, error_type: LexicalErrorType) -> Self {
-        Self { line, error_type }
+    pub fn new(line: u32, char: u32, error_type: LexicalErrorType) -> Self {
+        Self {
+            line,
+            char,
+            error_type,
+        }
     }
 
     pub fn to_string(self) -> String {
         match self.error_type {
             LexicalErrorType::UnexpectedCharacter(c) => {
-                format!("[line {}] Error: Unexpected character: {}", self.line, c)
+                format!(
+                    "[line:char {}:{}] Error: Unexpected character: {}",
+                    self.line, self.char, c
+                )
             }
         }
     }

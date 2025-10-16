@@ -5,6 +5,7 @@ use crate::{
         lexer::{Token, TokenType},
     },
     runtime::{environment::Environment, interpreter::evaluate, values},
+    utils::token_pos,
 };
 
 // Function that evaluates a variable assignment expression
@@ -20,7 +21,8 @@ pub fn evaluate_assignment_expression(
             values::RuntimeValue::Number(num) => num,
             _ => {
                 return Err(format!(
-                    "Variable {} is not a number",
+                    "{} Variable {} is not a number",
+                    token_pos(&assignment.variable),
                     assignment.variable.lexeme
                 ));
             }
@@ -28,7 +30,8 @@ pub fn evaluate_assignment_expression(
         None => {
             if assignment.command.token_type != TokenType::Clear {
                 return Err(format!(
-                    "Variable {} is not defined",
+                    "{} Variable {} is not defined",
+                    token_pos(&assignment.variable),
                     assignment.variable.lexeme
                 ));
             }
@@ -49,6 +52,12 @@ pub fn evaluate_assignment_expression(
             );
         }
         TokenType::Decrement => {
+            if value == 0 {
+                return Err(format!(
+                    "{} Cannot decrement a variable with value 0",
+                    token_pos(&assignment.variable)
+                ));
+            }
             environment.assign_variable(
                 assignment.variable.lexeme,
                 values::RuntimeValue::Number(value - 1),
@@ -56,7 +65,8 @@ pub fn evaluate_assignment_expression(
         }
         _ => {
             return Err(format!(
-                "Invalid assignment command {}",
+                "{} Invalid assignment command {}",
+                token_pos(&assignment.variable),
                 assignment.command.lexeme
             ));
         }
@@ -105,7 +115,7 @@ pub fn evaluate_comparison_expression(
         TokenType::Is => Ok(values::RuntimeValue::Boolean(left == right)),
         TokenType::Not => Ok(values::RuntimeValue::Boolean(left != right)),
         _ => Err(format!(
-            "Invalid operator, only the 'is' and 'not is' operators are supported, got: {}",
+            "Invalid operator, only the 'is' and 'not' operators are supported, got: {}",
             comparison.operator.token_type
         )),
     }
