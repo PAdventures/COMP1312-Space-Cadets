@@ -3,7 +3,7 @@
 These are the solutions I came up with for Space Cadets 2025 challenge.
 
 - Week 1: [Challenge solved](./SCChallengeEmail) (TypeScript, using Deno runtime)
-- Week 2: [Challenge solved](./SCChallengeBareBones) (Rust, using Cargo)
+- Week 2: [Challenge solved](https://github.com/PAdventures/COMP1312-Space-Cadets/tree/c2bfdc56ccde1cf6afe2b045e6459ae3d1f1f381) (Rust, using Cargo)
 - Week 3: _In progress_ (Rust, using Cargo)
 - Week 4: N/A
 - Week 5: N/A
