@@ -5,6 +5,13 @@
 #[derive(Clone, Debug)]
 pub enum LexicalErrorType {
     UnexpectedCharacter(char),
+    InvalidCharacterLiteral(String),
+    InvalidEscapeSequence(String),
+    EmptyCharacterLiteral,
+    UnterminatedCharacterLiteral,
+    UnterminatedStringLiteral,
+    InvalidIntegerLiteral(String, String),
+    InvalidFloatLiteral(String, String),
 }
 
 #[derive(Clone, Debug)]
@@ -27,8 +34,50 @@ impl LexicalError {
         match self.error_type {
             LexicalErrorType::UnexpectedCharacter(c) => {
                 format!(
-                    "[line:char {}:{}] Error: Unexpected character: {}",
+                    "[line:char {}:{}] Unexpected character: {}",
                     self.line, self.char, c
+                )
+            }
+            LexicalErrorType::InvalidCharacterLiteral(s) => {
+                format!(
+                    "[line:char {}:{}] Invalid character literal: {}",
+                    self.line, self.char, s
+                )
+            }
+            LexicalErrorType::EmptyCharacterLiteral => {
+                format!(
+                    "[line:char {}:{}] Error: Character literals cannot be empty",
+                    self.line, self.char
+                )
+            }
+            LexicalErrorType::UnterminatedCharacterLiteral => {
+                format!(
+                    "[line:char {}:{}] Error: Unterminated character literal",
+                    self.line, self.char
+                )
+            }
+            LexicalErrorType::InvalidEscapeSequence(s) => {
+                format!(
+                    "[line:char {}:{}] Invalid escape sequence: {}",
+                    self.line, self.char, s
+                )
+            }
+            LexicalErrorType::UnterminatedStringLiteral => {
+                format!(
+                    "[line:char {}:{}] Error: Unterminated string literal",
+                    self.line, self.char
+                )
+            }
+            LexicalErrorType::InvalidIntegerLiteral(s, m) => {
+                format!(
+                    "[line:char {}:{}] Invalid integer literal: {}, {}",
+                    self.line, self.char, s, m
+                )
+            }
+            LexicalErrorType::InvalidFloatLiteral(s, m) => {
+                format!(
+                    "[line:char {}:{}] Invalid float literal: {}, {}",
+                    self.line, self.char, s, m
                 )
             }
         }
