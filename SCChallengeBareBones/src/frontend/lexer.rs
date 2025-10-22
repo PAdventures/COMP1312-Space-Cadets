@@ -67,6 +67,7 @@ pub enum TokenType {
     CharacterLiteral,
     StringLiteral,
     BooleanLiteral,
+    NullLiteral,
 
     // Others
     Identifier,
@@ -251,6 +252,7 @@ impl Scanner {
             "into" => TokenType::Into,
             "in" => TokenType::In,
             "end" => TokenType::End,
+            "null" => TokenType::NullLiteral,
             _ => TokenType::Identifier,
         }
     }
