@@ -5,7 +5,6 @@
 #[derive(Clone, Debug)]
 pub enum LexicalErrorType {
     UnexpectedCharacter(char),
-    InvalidCharacterLiteral(String),
     InvalidEscapeSequence(String),
     EmptyCharacterLiteral,
     UnterminatedCharacterLiteral,
@@ -36,12 +35,6 @@ impl LexicalError {
                 format!(
                     "[line:char {}:{}] Unexpected character: {}",
                     self.line, self.char, c
-                )
-            }
-            LexicalErrorType::InvalidCharacterLiteral(s) => {
-                format!(
-                    "[line:char {}:{}] Invalid character literal: {}",
-                    self.line, self.char, s
                 )
             }
             LexicalErrorType::EmptyCharacterLiteral => {
