@@ -64,8 +64,8 @@ pub enum TokenType {
     // Literals
     IntegerLiteral,
     FloatLiteral,
-    CharacterLiteral,
-    StringLiteral,
+    // CharacterLiteral,
+    // StringLiteral,
     BooleanLiteral,
     NullLiteral,
 
@@ -94,8 +94,8 @@ pub enum TokenLiteral {
     Identifier(String),
     Integer(i64),
     Float(f64),
-    Character(char),
-    String(String),
+    // Character(char),
+    // String(String),
     Boolean(bool),
     Null,
 }
@@ -107,8 +107,8 @@ impl fmt::Display for TokenLiteral {
             TokenLiteral::Identifier(ident) => write!(f, "{}", ident),
             TokenLiteral::Integer(i) => write!(f, "{}", i),
             TokenLiteral::Float(fl) => write!(f, "{}", fl),
-            TokenLiteral::Character(c) => write!(f, "'{}'", c),
-            TokenLiteral::String(s) => write!(f, "\"{}\"", s),
+            // TokenLiteral::Character(c) => write!(f, "'{}'", c),
+            // TokenLiteral::String(s) => write!(f, "\"{}\"", s),
             TokenLiteral::Boolean(b) => write!(f, "{}", b),
             TokenLiteral::Null => write!(f, "null"),
         }
@@ -266,8 +266,8 @@ impl Scanner {
             // '[' => self.add_token(TokenType::LeftBracket, TokenLiteral::Null),
             // ']' => self.add_token(TokenType::RightBracket, TokenLiteral::Null),
             ';' => self.add_token(TokenType::SemiColon, TokenLiteral::Null),
-            '\'' => self.character(),
-            '"' => self.string(),
+            // '\'' => self.character(),
+            // '"' => self.string(),
             '/' => {
                 if self.peek() == '/' {
                     self.comment();
@@ -313,101 +313,101 @@ impl Scanner {
     }
 
     // Helper function that converts a sequence of characters into a string literal token
-    fn string(&mut self) {
-        let mut result = String::new();
+    // fn string(&mut self) {
+    //     let mut result = String::new();
 
-        while !self.is_at_end() {
-            let c = self.peek();
+    //     while !self.is_at_end() {
+    //         let c = self.peek();
 
-            // End of string (unescaped quote)
-            if c == '"' {
-                break;
-            }
+    //         // End of string (unescaped quote)
+    //         if c == '"' {
+    //             break;
+    //         }
 
-            // Handle escape sequences
-            if c == '\\' {
-                self.advance(); // consume '\'
-                if self.is_at_end() {
-                    self.error(LexicalErrorType::UnterminatedStringLiteral);
-                    return;
-                }
+    //         // Handle escape sequences
+    //         if c == '\\' {
+    //             self.advance(); // consume '\'
+    //             if self.is_at_end() {
+    //                 self.error(LexicalErrorType::UnterminatedStringLiteral);
+    //                 return;
+    //             }
 
-                let next = self.peek();
-                let escaped_char = self.escaped(&['\\', next]);
-                if escaped_char == '\0' {
-                    self.error(LexicalErrorType::InvalidEscapeSequence(format!(
-                        "\\{}",
-                        next
-                    )));
-                    return;
-                }
+    //             let next = self.peek();
+    //             let escaped_char = self.escaped(&['\\', next]);
+    //             if escaped_char == '\0' {
+    //                 self.error(LexicalErrorType::InvalidEscapeSequence(format!(
+    //                     "\\{}",
+    //                     next
+    //                 )));
+    //                 return;
+    //             }
 
-                result.push(escaped_char);
-                self.advance(); // consume escaped character
-                continue;
-            }
+    //             result.push(escaped_char);
+    //             self.advance(); // consume escaped character
+    //             continue;
+    //         }
 
-            // Normal character
-            result.push(c);
-            self.advance();
-        }
+    //         // Normal character
+    //         result.push(c);
+    //         self.advance();
+    //     }
 
-        // Expect closing quote
-        if !self.match_char('"') {
-            self.error(LexicalErrorType::UnterminatedStringLiteral);
-            return;
-        }
+    //     // Expect closing quote
+    //     if !self.match_char('"') {
+    //         self.error(LexicalErrorType::UnterminatedStringLiteral);
+    //         return;
+    //     }
 
-        self.add_token(TokenType::StringLiteral, TokenLiteral::String(result));
-    }
+    //     self.add_token(TokenType::StringLiteral, TokenLiteral::String(result));
+    // }
 
     // Helper function that converts a sequence of characters into a character literal token
-    fn character(&mut self) {
-        if self.is_at_end() {
-            self.error(LexicalErrorType::UnterminatedCharacterLiteral);
-            return;
-        }
+    // fn character(&mut self) {
+    //     if self.is_at_end() {
+    //         self.error(LexicalErrorType::UnterminatedCharacterLiteral);
+    //         return;
+    //     }
 
-        #[allow(unused_assignments)]
-        let mut value: Option<char> = None;
+    //     #[allow(unused_assignments)]
+    //     let mut value: Option<char> = None;
 
-        if self.peek() == '\\' {
-            // Handle escaped character like '\n' or '\\'
-            self.advance(); // consume '\'
-            if self.is_at_end() {
-                self.error(LexicalErrorType::UnterminatedCharacterLiteral);
-                return;
-            }
-            let esc = self.peek();
-            let escaped_char = self.escaped(&['\\', esc]);
-            if escaped_char == '\0' {
-                self.error(LexicalErrorType::InvalidEscapeSequence(format!(
-                    "\\{}",
-                    esc
-                )));
-                return;
-            }
-            value = Some(escaped_char);
-            self.advance(); // consume the escaped character
-        } else {
-            // Normal single char
-            value = Some(self.peek());
-            self.advance();
-        }
+    //     if self.peek() == '\\' {
+    //         // Handle escaped character like '\n' or '\\'
+    //         self.advance(); // consume '\'
+    //         if self.is_at_end() {
+    //             self.error(LexicalErrorType::UnterminatedCharacterLiteral);
+    //             return;
+    //         }
+    //         let esc = self.peek();
+    //         let escaped_char = self.escaped(&['\\', esc]);
+    //         if escaped_char == '\0' {
+    //             self.error(LexicalErrorType::InvalidEscapeSequence(format!(
+    //                 "\\{}",
+    //                 esc
+    //             )));
+    //             return;
+    //         }
+    //         value = Some(escaped_char);
+    //         self.advance(); // consume the escaped character
+    //     } else {
+    //         // Normal single char
+    //         value = Some(self.peek());
+    //         self.advance();
+    //     }
 
-        // Expect closing quote
-        if !self.match_char('\'') {
-            self.error(LexicalErrorType::UnterminatedCharacterLiteral);
-            return;
-        }
+    //     // Expect closing quote
+    //     if !self.match_char('\'') {
+    //         self.error(LexicalErrorType::UnterminatedCharacterLiteral);
+    //         return;
+    //     }
 
-        // Check for empty or too long char literals
-        if let Some(ch) = value {
-            self.add_token(TokenType::CharacterLiteral, TokenLiteral::Character(ch));
-        } else {
-            self.error(LexicalErrorType::EmptyCharacterLiteral);
-        }
-    }
+    //     // Check for empty or too long char literals
+    //     if let Some(ch) = value {
+    //         self.add_token(TokenType::CharacterLiteral, TokenLiteral::Character(ch));
+    //     } else {
+    //         self.error(LexicalErrorType::EmptyCharacterLiteral);
+    //     }
+    // }
 
     // Helper function that converts a word into an identifier, boolean literal, or keyword token
     fn identifier(&mut self) {

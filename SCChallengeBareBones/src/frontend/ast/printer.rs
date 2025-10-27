@@ -333,11 +333,11 @@ impl ASTPrinter {
     fn output_literal(&self, literal: &ASTLiteral) -> String {
         match literal {
             ASTLiteral::Boolean(bool) => bool.to_string(),
-            ASTLiteral::Character(char) => format!("'{}'", char),
+            // ASTLiteral::Character(char) => format!("'{}'", char),
             ASTLiteral::Float(fl) => fl.to_string(),
             ASTLiteral::Integer(int) => int.to_string(),
             ASTLiteral::Null => "null".to_string(),
-            ASTLiteral::String(str) => format!("\"{}\"", str),
+            // ASTLiteral::String(str) => format!("\"{}\"", str),
         }
     }
 }

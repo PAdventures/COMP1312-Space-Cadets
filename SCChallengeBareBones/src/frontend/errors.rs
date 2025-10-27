@@ -5,10 +5,10 @@
 #[derive(Clone, Debug)]
 pub enum LexicalErrorType {
     UnexpectedCharacter(char),
-    InvalidEscapeSequence(String),
-    EmptyCharacterLiteral,
-    UnterminatedCharacterLiteral,
-    UnterminatedStringLiteral,
+    // InvalidEscapeSequence(String),
+    // EmptyCharacterLiteral,
+    // UnterminatedCharacterLiteral,
+    // UnterminatedStringLiteral,
     InvalidIntegerLiteral(String, String),
     InvalidFloatLiteral(String, String),
 }
@@ -37,30 +37,30 @@ impl LexicalError {
                     self.line, self.char, c
                 )
             }
-            LexicalErrorType::EmptyCharacterLiteral => {
-                format!(
-                    "[line:char {}:{}] Error: Character literals cannot be empty",
-                    self.line, self.char
-                )
-            }
-            LexicalErrorType::UnterminatedCharacterLiteral => {
-                format!(
-                    "[line:char {}:{}] Error: Unterminated character literal",
-                    self.line, self.char
-                )
-            }
-            LexicalErrorType::InvalidEscapeSequence(s) => {
-                format!(
-                    "[line:char {}:{}] Invalid escape sequence: {}",
-                    self.line, self.char, s
-                )
-            }
-            LexicalErrorType::UnterminatedStringLiteral => {
-                format!(
-                    "[line:char {}:{}] Error: Unterminated string literal",
-                    self.line, self.char
-                )
-            }
+            // LexicalErrorType::EmptyCharacterLiteral => {
+            //     format!(
+            //         "[line:char {}:{}] Error: Character literals cannot be empty",
+            //         self.line, self.char
+            //     )
+            // }
+            // LexicalErrorType::UnterminatedCharacterLiteral => {
+            //     format!(
+            //         "[line:char {}:{}] Error: Unterminated character literal",
+            //         self.line, self.char
+            //     )
+            // }
+            // LexicalErrorType::InvalidEscapeSequence(s) => {
+            //     format!(
+            //         "[line:char {}:{}] Invalid escape sequence: {}",
+            //         self.line, self.char, s
+            //     )
+            // }
+            // LexicalErrorType::UnterminatedStringLiteral => {
+            //     format!(
+            //         "[line:char {}:{}] Error: Unterminated string literal",
+            //         self.line, self.char
+            //     )
+            // }
             LexicalErrorType::InvalidIntegerLiteral(s, m) => {
                 format!(
                     "[line:char {}:{}] Invalid integer literal: {}, {}",

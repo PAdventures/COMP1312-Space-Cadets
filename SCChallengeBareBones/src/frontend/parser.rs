@@ -434,14 +434,14 @@ impl<'a> Parser<'a> {
                 Ok(expr) => expr,
                 Err(e) => return Err(e),
             },
-            TokenType::StringLiteral => match self.parse_string_literal() {
-                Ok(expr) => expr,
-                Err(e) => return Err(e),
-            },
-            TokenType::CharacterLiteral => match self.parse_character_literal() {
-                Ok(expr) => expr,
-                Err(e) => return Err(e),
-            },
+            // TokenType::StringLiteral => match self.parse_string_literal() {
+            //     Ok(expr) => expr,
+            //     Err(e) => return Err(e),
+            // },
+            // TokenType::CharacterLiteral => match self.parse_character_literal() {
+            //     Ok(expr) => expr,
+            //     Err(e) => return Err(e),
+            // },
             TokenType::BooleanLiteral => match self.parse_boolean_literal() {
                 Ok(expr) => expr,
                 Err(e) => return Err(e),
@@ -725,21 +725,21 @@ impl<'a> Parser<'a> {
         Ok(ASTExpression::Literal(literal))
     }
 
-    fn parse_character_literal(&mut self) -> Result<ASTExpression, ParserError> {
-        let literal = match self.advance().literal {
-            TokenLiteral::Character(char) => ASTLiteral::Character(char),
-            _ => return Err(self.error("Unexpected unit conversion error")),
-        };
-        Ok(ASTExpression::Literal(literal))
-    }
+    // fn parse_character_literal(&mut self) -> Result<ASTExpression, ParserError> {
+    //     let literal = match self.advance().literal {
+    //         TokenLiteral::Character(char) => ASTLiteral::Character(char),
+    //         _ => return Err(self.error("Unexpected unit conversion error")),
+    //     };
+    //     Ok(ASTExpression::Literal(literal))
+    // }
 
-    fn parse_string_literal(&mut self) -> Result<ASTExpression, ParserError> {
-        let literal = match &self.advance().literal {
-            TokenLiteral::String(str) => ASTLiteral::String(str.to_owned()),
-            _ => return Err(self.error("Unexpected unit conversion error")),
-        };
-        Ok(ASTExpression::Literal(literal))
-    }
+    // fn parse_string_literal(&mut self) -> Result<ASTExpression, ParserError> {
+    //     let literal = match &self.advance().literal {
+    //         TokenLiteral::String(str) => ASTLiteral::String(str.to_owned()),
+    //         _ => return Err(self.error("Unexpected unit conversion error")),
+    //     };
+    //     Ok(ASTExpression::Literal(literal))
+    // }
 
     fn parse_boolean_literal(&mut self) -> Result<ASTExpression, ParserError> {
         let literal = match self.advance().literal {

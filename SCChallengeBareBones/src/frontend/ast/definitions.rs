@@ -245,8 +245,8 @@ impl ComparisonExpression {
 pub enum ASTLiteral {
     Integer(i64),
     Float(f64),
-    Character(char),
-    String(String),
+    // Character(char),
+    // String(String),
     Boolean(bool),
     // Array(Vec<ASTLiteral>),
     Null,
