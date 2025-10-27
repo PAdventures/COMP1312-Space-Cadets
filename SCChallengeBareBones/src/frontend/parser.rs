@@ -421,211 +421,162 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_precedence(&mut self, precedence: Precedence) -> Result<ASTExpression, ParserError> {
-        let mut expression =
-            match self.peek().token_type {
-                TokenType::NullLiteral => {
-                    self.advance();
-                    ASTExpression::Literal(ASTLiteral::Null)
-                }
-                TokenType::IntegerLiteral => match self.parse_integer_literal() {
+        let mut expression = match self.peek().token_type {
+            TokenType::NullLiteral => {
+                self.advance();
+                ASTExpression::Literal(ASTLiteral::Null)
+            }
+            TokenType::IntegerLiteral => match self.parse_integer_literal() {
+                Ok(expr) => expr,
+                Err(e) => return Err(e),
+            },
+            TokenType::FloatLiteral => match self.parse_float_literal() {
+                Ok(expr) => expr,
+                Err(e) => return Err(e),
+            },
+            TokenType::StringLiteral => match self.parse_string_literal() {
+                Ok(expr) => expr,
+                Err(e) => return Err(e),
+            },
+            TokenType::CharacterLiteral => match self.parse_character_literal() {
+                Ok(expr) => expr,
+                Err(e) => return Err(e),
+            },
+            TokenType::BooleanLiteral => match self.parse_boolean_literal() {
+                Ok(expr) => expr,
+                Err(e) => return Err(e),
+            },
+            TokenType::Identifier => {
+                let identifier = self.advance().clone();
+                ASTExpression::Variable(identifier)
+            }
+            TokenType::LeftParen => {
+                self.advance(); // consume '('
+                let expr = self.parse_expression()?;
+                self.consume(TokenType::RightParen, "Expected ')' after expression")?;
+                ASTExpression::Grouping(Box::new(expr))
+            }
+            TokenType::Negate | TokenType::Not => {
+                let operator_token = self.advance().clone();
+                let right = self.parse_precedence(Precedence::Unary)?;
+                ASTExpression::Unary(UnaryExpression::new(operator_token, Box::new(right)))
+            }
+            TokenType::Add => {
+                let operator_token = self.advance().clone();
+                let left = self.parse_precedence(Precedence::Term)?;
+                self.consume(TokenType::To, "Expected a 'to' keyword token after lhs")?;
+                let right = self.parse_precedence(Precedence::Term)?;
+                self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
+                let into = self.advance().clone();
+                ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
+            }
+            TokenType::Subtract => {
+                let operator_token = self.advance().clone();
+                let left = self.parse_precedence(Precedence::Term)?;
+                self.consume(TokenType::From, "Expected a 'from' keyword token after lhs")?;
+                let right = self.parse_precedence(Precedence::Term)?;
+                self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
+                let into = self.advance().clone();
+                ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
+            }
+            TokenType::Multiply => {
+                let operator_token = self.advance().clone();
+                let left = self.parse_precedence(Precedence::Factor)?;
+                self.consume(TokenType::By, "Expected a 'by' keyword token after lhs")?;
+                let right = self.parse_precedence(Precedence::Factor)?;
+                self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
+                let into = self.advance().clone();
+                ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
+            }
+            TokenType::Divide => {
+                let operator_token = self.advance().clone();
+                let left = self.parse_precedence(Precedence::Factor)?;
+                self.consume(TokenType::By, "Expected a 'by' keyword token after lhs")?;
+                let right = self.parse_precedence(Precedence::Factor)?;
+                self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
+                let into = self.advance().clone();
+                ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
+            }
+            TokenType::Clear => {
+                let operator_token = self.advance().clone();
+                let variable = self
+                    .consume(
+                        TokenType::Identifier,
+                        "Expected an identifier after assignment",
+                    )?
+                    .clone();
+                ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
+                    variable,
+                    operator_token,
+                    None,
+                ))
+            }
+            TokenType::Increment | TokenType::Decrement => {
+                match self.parse_increment_decrement_expression() {
                     Ok(expr) => expr,
                     Err(e) => return Err(e),
-                },
-                TokenType::FloatLiteral => match self.parse_float_literal() {
-                    Ok(expr) => expr,
-                    Err(e) => return Err(e),
-                },
-                TokenType::StringLiteral => match self.parse_string_literal() {
-                    Ok(expr) => expr,
-                    Err(e) => return Err(e),
-                },
-                TokenType::CharacterLiteral => match self.parse_character_literal() {
-                    Ok(expr) => expr,
-                    Err(e) => return Err(e),
-                },
-                TokenType::BooleanLiteral => match self.parse_boolean_literal() {
-                    Ok(expr) => expr,
-                    Err(e) => return Err(e),
-                },
-                TokenType::Identifier => {
-                    let identifier = self.advance().clone();
-                    ASTExpression::Variable(identifier)
                 }
-                TokenType::LeftParen => {
-                    self.advance(); // consume '('
-                    let expr = self.parse_expression()?;
-                    self.consume(TokenType::RightParen, "Expected ')' after expression")?;
-                    ASTExpression::Grouping(Box::new(expr))
-                }
-                TokenType::Negate | TokenType::Not => {
-                    let operator_token = self.advance().clone();
-                    let right = self.parse_precedence(Precedence::Unary)?;
-                    ASTExpression::Unary(UnaryExpression::new(operator_token, Box::new(right)))
-                }
-                TokenType::Add => {
-                    let operator_token = self.advance().clone();
-                    let left = self.parse_precedence(Precedence::Term)?;
-                    self.consume(TokenType::To, "Expected a 'to' keyword token after lhs")?;
-                    let right = self.parse_precedence(Precedence::Term)?;
-                    self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
-                    let into = self.advance().clone();
-                    ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
-                }
-                TokenType::Subtract => {
-                    let operator_token = self.advance().clone();
-                    let left = self.parse_precedence(Precedence::Term)?;
-                    self.consume(TokenType::From, "Expected a 'from' keyword token after lhs")?;
-                    let right = self.parse_precedence(Precedence::Term)?;
-                    self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
-                    let into = self.advance().clone();
-                    ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
-                }
-                TokenType::Multiply => {
-                    let operator_token = self.advance().clone();
-                    let left = self.parse_precedence(Precedence::Factor)?;
-                    self.consume(TokenType::By, "Expected a 'by' keyword token after lhs")?;
-                    let right = self.parse_precedence(Precedence::Factor)?;
-                    self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
-                    let into = self.advance().clone();
-                    ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
-                }
-                TokenType::Divide => {
-                    let operator_token = self.advance().clone();
-                    let left = self.parse_precedence(Precedence::Factor)?;
-                    self.consume(TokenType::By, "Expected a 'by' keyword token after lhs")?;
-                    let right = self.parse_precedence(Precedence::Factor)?;
-                    self.consume(TokenType::Into, "Expected a 'into' keyword token after rhs")?;
-                    let into = self.advance().clone();
-                    ASTExpression::Binary(BinaryExpression::new(left, operator_token, right, into))
-                }
-                TokenType::Clear => {
-                    let operator_token = self.advance().clone();
-                    let variable = self
-                        .consume(
-                            TokenType::Identifier,
-                            "Expected an identifier after assignment",
-                        )?
-                        .clone();
-                    ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
-                        variable,
-                        operator_token,
-                        None,
-                    ))
-                }
-                TokenType::Increment | TokenType::Decrement => {
-                    let operator_token = self.advance().clone();
-                    let variable = self
-                        .consume(
-                            TokenType::Identifier,
-                            "Expected an identifier after assignment",
-                        )?
-                        .clone();
+            }
+            TokenType::Set => {
+                let command = self.advance().clone();
+                let variable = self
+                    .consume(
+                        TokenType::Identifier,
+                        "Expected an identifier after assignment",
+                    )?
+                    .clone();
+                self.consume(
+                    TokenType::To,
+                    "Expected a 'to' keyword token after variable",
+                )?;
+                let value = self.parse_expression()?;
+                ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
+                    variable,
+                    command,
+                    Some(Box::new(value)),
+                ))
+            }
+            TokenType::Copy => {
+                let command = self.advance().clone();
+                let source = self
+                    .consume(
+                        TokenType::Identifier,
+                        "Expected an identifier after assignment",
+                    )?
+                    .clone();
+                self.consume(
+                    TokenType::Into,
+                    "Expected a 'into' keyword token after variable",
+                )?;
+                let destination = self
+                    .consume(
+                        TokenType::Identifier,
+                        "Expected an identifier after 'into' keyword token",
+                    )?
+                    .clone();
+                ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
+                    destination,
+                    command,
+                    Some(Box::new(ASTExpression::Variable(source))),
+                ))
+            }
+            TokenType::Call => match self.parse_call_expression() {
+                Ok(expr) => expr,
+                Err(e) => return Err(e),
+            },
+            TokenType::Return => {
+                self.advance();
 
-                    if self.check(&TokenType::By) {
-                        self.advance();
-                        let step =
-                            match self.parse_precedence(Precedence::Assignment) {
-                                Ok(expr) => match expr {
-                                    ASTExpression::Literal(literal) => match literal {
-                                        ASTLiteral::Integer(int) => int,
-                                        _ => return Err(self.error(
-                                            "Expected an integer literal after 'by' keyword token",
-                                        )),
-                                    },
-                                    _ => {
-                                        return Err(self
-                                            .error("Expected a literal after 'by' keyword token"));
-                                    }
-                                },
-                                Err(e) => return Err(e),
-                            };
-                        if step < 1 {
-                            return Err(self
-                                .error("The step after the 'by' keyword token cannot be below 1"));
-                        }
-                        ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
-                            variable,
-                            operator_token,
-                            Some(Box::new(ASTExpression::Literal(ASTLiteral::Integer(step)))),
-                        ))
-                    } else {
-                        ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
-                            variable,
-                            operator_token,
-                            None,
-                        ))
-                    }
-                }
-                TokenType::Set => {
-                    let command = self.advance().clone();
-                    let variable = self
-                        .consume(
-                            TokenType::Identifier,
-                            "Expected an identifier after assignment",
-                        )?
-                        .clone();
-                    self.consume(
-                        TokenType::To,
-                        "Expected a 'to' keyword token after variable",
-                    )?;
-                    let value = self.parse_expression()?;
-                    ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
-                        variable,
-                        command,
-                        Some(Box::new(value)),
-                    ))
-                }
-                TokenType::Copy => {
-                    let command = self.advance().clone();
-                    let source = self
-                        .consume(
-                            TokenType::Identifier,
-                            "Expected an identifier after assignment",
-                        )?
-                        .clone();
-                    self.consume(
-                        TokenType::Into,
-                        "Expected a 'into' keyword token after variable",
-                    )?;
-                    let destination = self
-                        .consume(
-                            TokenType::Identifier,
-                            "Expected an identifier after 'into' keyword token",
-                        )?
-                        .clone();
-                    ASTExpression::VariableAssignment(VariableAssignmentExpression::new(
-                        destination,
-                        command,
-                        Some(Box::new(ASTExpression::Variable(source))),
-                    ))
-                }
-                TokenType::Call => {
-                    self.advance();
-                    let function = self.advance().clone();
-                    self.consume(
-                        TokenType::Argument,
-                        "Expected a 'param' keyword token after function name",
-                    )?;
-                    let mut arguments: Vec<ASTExpression> = Vec::new();
-                    while !self.is_at_end() && self.peek().token_type != TokenType::SemiColon {
-                        let arg = self.parse_expression()?;
-                        arguments.push(arg);
-                    }
-                    ASTExpression::Call(FunctionCallExpression::new(function, arguments))
-                }
-                TokenType::Return => {
-                    self.advance();
+                let expression = if self.peek().token_type != TokenType::SemiColon {
+                    Some(Box::new(self.parse_expression()?))
+                } else {
+                    None
+                };
 
-                    let expression = if self.peek().token_type != TokenType::SemiColon {
-                        Some(Box::new(self.parse_expression()?))
-                    } else {
-                        None
-                    };
-
-                    ASTExpression::Return(expression)
-                }
-                _ => return Err(self.error("Unexpected expression")),
-            };
+                ASTExpression::Return(expression)
+            }
+            _ => return Err(self.error("Unexpected expression")),
+        };
 
         while !self.is_at_end() && precedence <= self.get_precedence() {
             // Logical and comparison operators
@@ -697,6 +648,64 @@ impl<'a> Parser<'a> {
             | TokenType::LessEqual
             | TokenType::GreaterEqual => Precedence::Comparison,
             _ => Precedence::Lowest,
+        }
+    }
+
+    fn parse_call_expression(&mut self) -> Result<ASTExpression, ParserError> {
+        self.advance();
+        let function = self.advance().clone();
+        let mut arguments: Vec<ASTExpression> = Vec::new();
+        while !self.is_at_end() && self.peek().token_type == TokenType::Argument {
+            self.advance();
+            let arg = self.parse_expression()?;
+            arguments.push(arg);
+        }
+        Ok(ASTExpression::Call(FunctionCallExpression::new(
+            function, arguments,
+        )))
+    }
+
+    fn parse_increment_decrement_expression(&mut self) -> Result<ASTExpression, ParserError> {
+        let operator_token = self.advance().clone();
+        let variable = self
+            .consume(
+                TokenType::Identifier,
+                "Expected an identifier after assignment",
+            )?
+            .clone();
+
+        if self.check(&TokenType::By) {
+            self.advance();
+            let step = match self.parse_precedence(Precedence::Assignment) {
+                Ok(expr) => match expr {
+                    ASTExpression::Literal(literal) => match literal {
+                        ASTLiteral::Integer(int) => int,
+                        _ => {
+                            return Err(
+                                self.error("Expected an integer literal after 'by' keyword token")
+                            );
+                        }
+                    },
+                    _ => {
+                        return Err(self.error("Expected a literal after 'by' keyword token"));
+                    }
+                },
+                Err(e) => return Err(e),
+            };
+            if step < 1 {
+                return Err(self.error("The step after the 'by' keyword token cannot be below 1"));
+            }
+            Ok(ASTExpression::VariableAssignment(
+                VariableAssignmentExpression::new(
+                    variable,
+                    operator_token,
+                    Some(Box::new(ASTExpression::Literal(ASTLiteral::Integer(step)))),
+                ),
+            ))
+        } else {
+            Ok(ASTExpression::VariableAssignment(
+                VariableAssignmentExpression::new(variable, operator_token, None),
+            ))
         }
     }
 

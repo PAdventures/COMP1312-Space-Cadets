@@ -9,6 +9,8 @@ fn print param var then;
 	decr var by 5;
 end;
 
+call print arg X arg Y;
+
 clear Y;
 incr Y by 5;
 while Y gt 0 do;
